@@ -87,11 +87,13 @@ else()
     link_directories(${GFLAGS_LIBRARY_DIR})
 endif()
 
+message("--with-cuda=${CUDA_ROOT} --with-cuda-arch=${CUDA_ARCH}")
 # faiss
 if (NOT FAISS_PATH)
     if (NOT NO_FAISS)
         ExternalProject_Add(faiss
                 GIT_REPOSITORY      https://github.com/facebookresearch/faiss.git
+		GIT_TAG		    v1.6.2
                 UPDATE_DISCONNECTED ${SKIP_UPDATE}
                 PREFIX              faiss
                 SOURCE_DIR          ${EXTERNAL_DIR}/faiss

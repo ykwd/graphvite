@@ -450,6 +450,8 @@ public:
     }
 };
 
+//static size_t positive_samples = 0;
+//static size_t negative_samples = 0;
 /** Training worker for graphs */
 template<class _Solver>
 class GraphWorker : public WorkerMixin<_Solver> {
@@ -484,6 +486,9 @@ public:
                         train = &graph::train<Vector, Index, Node2Vec, kSGD>;
                 }
                 if (train) {
+                    positive_samples += batch.count / 2;
+                    negative_samples += negative_batch.count;
+                    //printf("\t positive: %zu, negative: %zu\n", positive_samples, negative_samples);
                     train<<<kBlockPerGrid, kThreadPerBlock, 0, work_stream>>>(
                             *embeddings[0], *embeddings[1],
                                     batch, negative_batch, loss, optimizer, solver->negative_weight

@@ -64,6 +64,8 @@ const Protocol kTailPartition = 0x4;
 const Protocol kInPlace = 0x8;
 const Protocol kSharedWithPredecessor = 0x10;
 
+static size_t positive_samples = 0;
+static size_t negative_samples = 0;
 /**
  * @brief General interface of graph embedding solvers
  * @tparam _dim dimension of embeddings
@@ -626,14 +628,18 @@ public:
             for (auto &&thread : sample_threads)
                 thread.join();
         }
+        printf("num partition: %d\n", num_partition);
         while (batch_id < num_batch) {
+            printf("batch (%d of %d):\n", batch_id, num_batch); 
             pool_id ^= 1;
             if (shuffle_partition)
                 assignment_offset = (assignment_offset + 1) % num_partition;
+            printf("\tnum sampler: %d\n", num_sampler);
             for (int i = 0; i < num_sampler; i++)
                 sample_threads[i] = std::thread(sample_function, samplers[i], work_load * i,
                                                 std::min(work_load * (i + 1), num_sample));
             for (auto &&assignment : schedule) {
+            printf("\tassignments: %zu\n", assignment.size());
                 for (int i = 0; i < assignment.size(); i++)
                     worker_threads[i] = std::thread(&Worker::train, workers[i],
                                                     assignment[i].first,
@@ -646,6 +652,7 @@ public:
                 for (auto &&thread : sample_threads)
                     thread.join();
             }
+            printf("\tpositives: %zu, negative: %zu\n", positive_samples, negative_samples);
         }
         for (int i = 0; i < num_worker; i++)
             worker_threads[i] = std::thread(&Worker::write_back, workers[i]);
